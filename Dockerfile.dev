@@ -1,0 +1,10 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+# herramienta de migraciones de EF Core
+RUN dotnet tool install --global dotnet-ef --version 8.*
+ENV PATH="${PATH}:/root/.dotnet/tools"
+
+WORKDIR /src
+COPY . .
+RUN dotnet restore
+CMD ["dotnet", "watch", "run", "--no-launch-profile", "--non-interactive", "--urls", "http://0.0.0.0:8080"]
