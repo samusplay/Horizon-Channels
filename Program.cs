@@ -8,7 +8,7 @@ var assembly = typeof(Program).Assembly;
 
 // ---------- base de datos ----------
 builder.Services.AddDbContext<ChannelsDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ChannelsDb")));
+   options.UseNpgsql(builder.Configuration.GetConnectionString("ChannelsDb")));
 
 // ---------- CQRS: MediatR + validación automática antes de cada handler ----------
 builder.Services.AddMediatR(cfg =>
@@ -18,7 +18,7 @@ builder.Services.AddMediatR(cfg =>
 });
 builder.Services.AddValidatorsFromAssembly(assembly);
 builder.Services.AddMapster();
-builder.Services.AddCarter();
+builder.Services.AddCarter(configurator: c => c.WithEmptyValidators());
 
 // ---------- manejo global de errores ----------
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -61,6 +61,13 @@ app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
+    // aplica las migraciones pendientes al arrancar (crea las tablas si no existen)
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ChannelsDbContext>();
+        db.Database.Migrate();
+    }
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

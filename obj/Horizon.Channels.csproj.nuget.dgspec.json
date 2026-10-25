@@ -106,7 +106,7 @@
               "target": "Package",
               "version": "[8.*, )"
             },
-            "Microsoft.EntityFrameworkCore.SqlServer": {
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
               "version": "[8.*, )"
             },
