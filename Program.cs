@@ -1,6 +1,9 @@
 using System.Security.Cryptography;
+using Azure.Storage.Blobs;
 using Horizon.Channels.Common.Behaviors;
+using Horizon.Channels.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +13,23 @@ var assembly = typeof(Program).Assembly;
 builder.Services.AddDbContext<ChannelsDbContext>(options =>
    options.UseNpgsql(builder.Configuration.GetConnectionString("ChannelsDb")));
 
+// ---------- almacenamiento de archivos (Azure Blob Storage) ----------
+builder.Services
+    .AddOptions<AzureStorageOptions>()
+    .Bind(builder.Configuration.GetSection(AzureStorageOptions.Section))
+    .Validate(o => !string.IsNullOrWhiteSpace(o.ConnectionString),
+        "Falta la configuración AzureStorage:ConnectionString")
+    .ValidateOnStart(); // si falta, la aplicación no arranca y lo dice
+
+// un solo cliente de Blob para toda la aplicación (es seguro entre hilos)
+builder.Services.AddSingleton(sp =>
+{
+    var storage = sp.GetRequiredService<IOptions<AzureStorageOptions>>().Value;
+    return new BlobServiceClient(storage.ConnectionString);
+});
+// el puerto IFileStorage se resuelve con el adaptador de Azure
+builder.Services.AddSingleton<IFileStorage, AzureBlobFileStorage>();
+
 // ---------- CQRS: MediatR + validación automática antes de cada handler ----------
 builder.Services.AddMediatR(cfg =>
 {
@@ -18,6 +38,8 @@ builder.Services.AddMediatR(cfg =>
 });
 builder.Services.AddValidatorsFromAssembly(assembly);
 builder.Services.AddMapster();
+
+// Carter solo registra los endpoints; los validadores los maneja FluentValidation + MediatR
 builder.Services.AddCarter(configurator: c => c.WithEmptyValidators());
 
 // ---------- manejo global de errores ----------

@@ -9,3 +9,5 @@ global using Horizon.Channels.Common.CQRS;
 global using Horizon.Channels.Common.Exceptions;
 global using Horizon.Channels.Domain;
 global using Horizon.Channels.Infrastructure;
+
+global using Horizon.Channels.Common.Storage;

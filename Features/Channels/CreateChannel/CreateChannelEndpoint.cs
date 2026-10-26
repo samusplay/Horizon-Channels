@@ -12,30 +12,34 @@ public sealed class CreateChannelEndpoint : ICarterModule
         app.MapPost("/api/channels", async (
                 CreateChannelRequest request, ClaimsPrincipal user, ISender sender, CancellationToken ct) =>
         {
-            // 1. quién es: el dueño sale del token, nunca del cuerpo
+            // 1. solo los creadores pueden tener canal (403 con mensaje claro)
+            if (!user.IsInRole("Creador"))
+                throw new ForbiddenException("Solo los creadores pueden tener un canal.");
+
+            // 2. quién es: el dueño sale del token, nunca del cuerpo
             var ownerId = Guid.Parse(user.FindFirstValue("sub")!);
 
-            // 2. Mapster convierte la petición HTTP en el comando, y le agregamos el dueño
+            // 3. Mapster convierte la petición HTTP en el comando, y le agregamos el dueño
             var command = request.Adapt<CreateChannelCommand>() with { OwnerId = ownerId };
 
-            // 3. ISender lleva el comando a su handler (pasando antes por el validador)
+            // 4. ISender lleva el comando a su handler (pasando antes por el validador)
             var result = await sender.Send(command, ct);
 
             return Results.Created($"/api/channels/{result.Handle}", result);
         })
-            .RequireAuthorization(policy => policy.RequireRole("Creador"))
+            .RequireAuthorization() // exige sesión iniciada; el rol se revisa arriba
             .WithTags("Channels")
             .WithName("CreateChannel")
             .WithSummary("Crea el canal del creador autenticado")
             .WithDescription(
                 "Crea un canal en estado PendingConfirmation y envía un correo de confirmación. " +
                 "Cada usuario puede tener un solo canal y el handle debe ser único. " +
-                "Requiere el rol Creador.")
+                "Solo los usuarios con rol Creador pueden tener canal.")
             .Produces<CreateChannelResult>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden)
             .WithOpenApi();
     }
 }

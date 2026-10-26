@@ -16,6 +16,8 @@ public sealed class CreateChannelValidator : AbstractValidator<CreateChannelComm
             .NotEmpty()
             .Matches("^[a-z0-9_-]{3,30}$")
             .WithMessage("El handle debe tener entre 3 y 30 caracteres: minúsculas, números, guion o guion bajo.")
+            .NotEqual("mine")                                   // ← línea nueva
+            .WithMessage("Ese handle está reservado.")          // ← línea nueva
             .MustAsync(async (handle, ct) => !await db.Channels.AnyAsync(c => c.Handle == handle, ct))
             .WithMessage("Ese handle ya está en uso.");
 

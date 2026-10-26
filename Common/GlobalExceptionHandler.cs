@@ -32,6 +32,8 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             NotFoundException => (StatusCodes.Status404NotFound, "No encontrado", ex.Message),
             ConflictException => (StatusCodes.Status409Conflict, "Conflicto", ex.Message),
             ForbiddenException => (StatusCodes.Status403Forbidden, "Prohibido", ex.Message),
+            GoneException => (StatusCodes.Status410Gone, "Expirado", ex.Message),
+            TooManyRequestsException => (StatusCodes.Status429TooManyRequests, "Demasiadas solicitudes", ex.Message),
             _ => (StatusCodes.Status500InternalServerError, "Error interno",
                   "Ocurrió un error inesperado."),
         };

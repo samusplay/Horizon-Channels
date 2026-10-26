@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Horizon.Channels")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9b4ad842a34419c0d72a4a2df3145354d05fdcaf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+11ff12f2678770cab931f804e034b158c7a89cbe")]
 [assembly: System.Reflection.AssemblyProductAttribute("Horizon.Channels")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Horizon.Channels")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
