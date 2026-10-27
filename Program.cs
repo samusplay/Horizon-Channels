@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using Azure.Storage.Blobs;
 using Horizon.Channels.Common.Behaviors;
+using Horizon.Channels.Common.Messaging;
+using Horizon.Channels.Infrastructure.Messaging;
 using Horizon.Channels.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
@@ -29,6 +31,16 @@ builder.Services.AddSingleton(sp =>
 });
 // el puerto IFileStorage se resuelve con el adaptador de Azure
 builder.Services.AddSingleton<IFileStorage, AzureBlobFileStorage>();
+
+// ---------- mensajería (RabbitMQ): publicar eventos hacia otros servicios ----------
+builder.Services
+    .AddOptions<RabbitMqOptions>()
+    .Bind(builder.Configuration.GetSection(RabbitMqOptions.Section))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+// el puerto IEventPublisher se resuelve con el adaptador de RabbitMQ
+builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
 
 // ---------- CQRS: MediatR + validación automática antes de cada handler ----------
 builder.Services.AddMediatR(cfg =>

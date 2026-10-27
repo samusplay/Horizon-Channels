@@ -2,7 +2,7 @@
 
 namespace Horizon.Channels.Features.Channels.CreateChannel;
 
-// El contrato HTTP: lo que manda el cliente en el cuerpo (sin OwnerId)
+// El contrato HTTP: lo que manda el cliente en el cuerpo (sin OwnerId ni email)
 public sealed record CreateChannelRequest(string Name, string Handle, string? Description);
 
 public sealed class CreateChannelEndpoint : ICarterModule
@@ -16,11 +16,19 @@ public sealed class CreateChannelEndpoint : ICarterModule
             if (!user.IsInRole("Creador"))
                 throw new ForbiddenException("Solo los creadores pueden tener un canal.");
 
-            // 2. quién es: el dueño sale del token, nunca del cuerpo
+            // 2. quién es y a dónde enviarle el correo: todo sale del token, nunca del cuerpo
             var ownerId = Guid.Parse(user.FindFirstValue("sub")!);
+            var ownerEmail = user.FindFirstValue("email");
 
-            // 3. Mapster convierte la petición HTTP en el comando, y le agregamos el dueño
-            var command = request.Adapt<CreateChannelCommand>() with { OwnerId = ownerId };
+            if (string.IsNullOrWhiteSpace(ownerEmail))
+                return Results.Unauthorized(); // un token sin email no sirve para confirmar el canal
+
+            // 3. Mapster convierte la petición HTTP en el comando, y le agregamos los datos del token
+            var command = request.Adapt<CreateChannelCommand>() with
+            {
+                OwnerId = ownerId,
+                OwnerEmail = ownerEmail
+            };
 
             // 4. ISender lleva el comando a su handler (pasando antes por el validador)
             var result = await sender.Send(command, ct);

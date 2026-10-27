@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "m2wQhzrNmec=",
+  "dgSpecHash": "TtsmFpg9fjw=",
   "success": true,
   "projectFilePath": "D:\\horizon\\Horizon.Channels\\Horizon.Channels.csproj",
   "expectedPackageFiles": [
@@ -61,6 +61,7 @@
     "D:\\NugetCache\\mono.texttemplating\\2.2.1\\mono.texttemplating.2.2.1.nupkg.sha512",
     "D:\\NugetCache\\npgsql\\8.0.6\\npgsql.8.0.6.nupkg.sha512",
     "D:\\NugetCache\\npgsql.entityframeworkcore.postgresql\\8.0.11\\npgsql.entityframeworkcore.postgresql.8.0.11.nupkg.sha512",
+    "D:\\NugetCache\\rabbitmq.client\\7.2.2\\rabbitmq.client.7.2.2.nupkg.sha512",
     "D:\\NugetCache\\swashbuckle.aspnetcore\\6.6.2\\swashbuckle.aspnetcore.6.6.2.nupkg.sha512",
     "D:\\NugetCache\\swashbuckle.aspnetcore.swagger\\6.6.2\\swashbuckle.aspnetcore.swagger.6.6.2.nupkg.sha512",
     "D:\\NugetCache\\swashbuckle.aspnetcore.swaggergen\\6.6.2\\swashbuckle.aspnetcore.swaggergen.6.6.2.nupkg.sha512",
@@ -86,7 +87,8 @@
     "D:\\NugetCache\\system.security.cryptography.protecteddata\\4.5.0\\system.security.cryptography.protecteddata.4.5.0.nupkg.sha512",
     "D:\\NugetCache\\system.text.encodings.web\\10.0.9\\system.text.encodings.web.10.0.9.nupkg.sha512",
     "D:\\NugetCache\\system.text.json\\10.0.9\\system.text.json.10.0.9.nupkg.sha512",
-    "D:\\NugetCache\\system.threading.channels\\7.0.0\\system.threading.channels.7.0.0.nupkg.sha512"
+    "D:\\NugetCache\\system.threading.channels\\7.0.0\\system.threading.channels.7.0.0.nupkg.sha512",
+    "D:\\NugetCache\\system.threading.ratelimiting\\8.0.0\\system.threading.ratelimiting.8.0.0.nupkg.sha512"
   ],
   "logs": []
 }

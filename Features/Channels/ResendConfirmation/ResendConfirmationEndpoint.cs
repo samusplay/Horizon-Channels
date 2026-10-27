@@ -9,12 +9,16 @@ public sealed class ResendConfirmationEndpoint : ICarterModule
         app.MapPost("/api/channels/{id:guid}/resend-confirmation", async (
                 Guid id, ClaimsPrincipal user, ISender sender, CancellationToken ct) =>
         {
-            // quién lo pide: sale del token
+            // quién lo pide y a dónde enviar el enlace: todo sale del token
             var userId = Guid.Parse(user.FindFirstValue("sub")!);
+            var email = user.FindFirstValue("email");
 
-            var result = await sender.Send(new ResendConfirmationCommand(id, userId), ct);
+            if (string.IsNullOrWhiteSpace(email))
+                return Results.Unauthorized(); // sin email no hay a dónde enviar el enlace
 
-            // 202: aceptado; el correo con el enlace se envía aparte
+            var result = await sender.Send(new ResendConfirmationCommand(id, userId, email), ct);
+
+            // 202: aceptado; el correo lo envía Notifications por su cuenta (asíncrono)
             return Results.Accepted(value: result);
         })
             .RequireAuthorization() // exige sesión; que sea el dueño lo revisa el handler

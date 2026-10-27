@@ -1,8 +1,12 @@
-﻿namespace Horizon.Channels.Features.Channels.CreateChannel;
+﻿using Horizon.Channels.Common.Messaging;
+using Horizon.Channels.Common.Messaging.Events;
+
+namespace Horizon.Channels.Features.Channels.CreateChannel;
 
 // ---------- lo que queremos hacer ----------
 public sealed record CreateChannelCommand(
     Guid OwnerId,          // sale del JWT, nunca del cuerpo de la petición
+    string OwnerEmail,     // también sale del JWT (claim "email"): a dónde va el correo
     string Name,
     string Handle,
     string? Description)
@@ -17,7 +21,11 @@ public sealed record CreateChannelResult(
 
 // ---------- quien lo ejecuta ----------
 //sealed es que nadie puede heredar esta clase
-internal sealed class CreateChannelHandler(ChannelsDbContext db, ILogger<CreateChannelHandler> logger)
+internal sealed class CreateChannelHandler(
+    ChannelsDbContext db,
+    IEventPublisher publisher,
+    IConfiguration configuration,
+    ILogger<CreateChannelHandler> logger)
     : ICommandHandler<CreateChannelCommand, CreateChannelResult>
 {
     public async Task<CreateChannelResult> Handle(CreateChannelCommand cmd, CancellationToken ct)
@@ -44,11 +52,37 @@ internal sealed class CreateChannelHandler(ChannelsDbContext db, ILogger<CreateC
             throw new ConflictException("Ya tienes un canal o ese handle está en uso.");
         }
 
-        // TEMPORAL: hasta tener el correo, el token se ve en el log. Se borra al conectar el email
-        logger.LogInformation("Token de confirmación del canal {Handle}: {Token}", channel.Handle, token);
+        // 4. avisamos al resto del sistema: Notifications enviará el correo
+        var confirmationRequested = new ChannelConfirmationRequested(
+            EventId: Guid.NewGuid(),
+            OccurredAt: DateTime.UtcNow,
+            UserId: cmd.OwnerId,
+            Email: cmd.OwnerEmail,
+            ChannelName: channel.Name,
+            ConfirmationUrl: BuildConfirmationUrl(token));
 
-        // 4. respondemos con un resumen (nunca el token ni el hash)
+        try
+        {
+            // CancellationToken.None: el canal ya se guardó; el aviso debe salir aunque el cliente se desconecte
+            await publisher.PublishAsync(
+                ChannelConfirmationRequested.RoutingKey,
+                confirmationRequested.EventId,
+                confirmationRequested,
+                CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            // el canal YA existe: no fallamos la petición; el usuario puede pedir "reenviar confirmación"
+            // (nunca se registra el token ni la URL)
+            logger.LogError(ex, "No se pudo publicar la confirmación del canal {ChannelId}", channel.Id);
+        }
+
+        // 5. respondemos con un resumen (nunca el token ni el hash)
         return new CreateChannelResult(
             channel.Id, channel.Name, channel.Handle, channel.Status.ToString());
     }
+
+    // el enlace apunta al FRONTEND; la página de confirmación llamará a la API con el token
+    private string BuildConfirmationUrl(string token) =>
+        $"{configuration["Frontend:BaseUrl"]}/channels/confirm?token={Uri.EscapeDataString(token)}";
 }

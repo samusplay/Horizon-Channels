@@ -23,6 +23,7 @@
           "Microsoft.CodeAnalysis.Workspaces.Common": "4.7.0",
           "Microsoft.EntityFrameworkCore.Design": "8.0.33",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.11",
+          "RabbitMQ.Client": "7.2.2",
           "Swashbuckle.AspNetCore": "6.6.2"
         },
         "runtime": {
@@ -786,6 +787,17 @@
           }
         }
       },
+      "RabbitMQ.Client/7.2.2": {
+        "dependencies": {
+          "System.IO.Pipelines": "10.0.9"
+        },
+        "runtime": {
+          "lib/net8.0/RabbitMQ.Client.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.2.2.0"
+          }
+        }
+      },
       "Swashbuckle.AspNetCore/6.6.2": {
         "dependencies": {
           "Swashbuckle.AspNetCore.Swagger": "6.6.2",
@@ -1404,6 +1416,13 @@
       "sha512": "sha512-leShR/O/nSIS3Jpj8yUBmkzaXzBbtlV326+MYkX2BwAj2qSNrUv/H6m8G9Hnv2zUkQYccTpmV5jIVq5vdciEUA==",
       "path": "npgsql.entityframeworkcore.postgresql/8.0.11",
       "hashPath": "npgsql.entityframeworkcore.postgresql.8.0.11.nupkg.sha512"
+    },
+    "RabbitMQ.Client/7.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-k4b6RnTXpLbsF96V93ooNYxgPMnoA2tEm24B6AXNJr1mG8wwNYdA1XJtgU66L5xqeGyveS7SJriRzlX3cbqQNA==",
+      "path": "rabbitmq.client/7.2.2",
+      "hashPath": "rabbitmq.client.7.2.2.nupkg.sha512"
     },
     "Swashbuckle.AspNetCore/6.6.2": {
       "type": "package",

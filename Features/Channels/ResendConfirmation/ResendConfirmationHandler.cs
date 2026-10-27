@@ -1,9 +1,13 @@
-﻿namespace Horizon.Channels.Features.Channels.ResendConfirmation;
+﻿using Horizon.Channels.Common.Messaging;
+using Horizon.Channels.Common.Messaging.Events;
+
+namespace Horizon.Channels.Features.Channels.ResendConfirmation;
 
 // ---------- lo que queremos hacer ----------
 public sealed record ResendConfirmationCommand(
     Guid ChannelId,
-    Guid UserId)          // quién lo pide (sale del JWT)
+    Guid UserId,          // quién lo pide (sale del JWT)
+    string Email)         // a dónde se envía el enlace (sale del JWT)
     : ICommand<ResendConfirmationResult>;
 
 // ---------- lo que devolvemos: solo hasta cuándo vale el enlace, NUNCA el token ----------
@@ -12,7 +16,8 @@ public sealed record ResendConfirmationResult(Guid ChannelId, DateTime ExpiresAt
 // ---------- quien lo ejecuta ----------
 internal sealed class ResendConfirmationHandler(
     ChannelsDbContext db,
-    ILogger<ResendConfirmationHandler> logger)
+    IEventPublisher publisher,
+    IConfiguration configuration)
     : ICommandHandler<ResendConfirmationCommand, ResendConfirmationResult>
 {
     public async Task<ResendConfirmationResult> Handle(ResendConfirmationCommand cmd, CancellationToken ct)
@@ -39,9 +44,26 @@ internal sealed class ResendConfirmationHandler(
         // 4. guardamos el hash nuevo (el token anterior deja de servir)
         await db.SaveChangesAsync(ct);
 
-        // TEMPORAL: hasta tener Notifications, el token se ve en el log
-        logger.LogInformation("Nuevo token de confirmación del canal {Handle}: {Token}", channel.Handle, token);
+        // 5. avisamos al resto del sistema: Notifications enviará el correo
+        var confirmationRequested = new ChannelConfirmationRequested(
+            EventId: Guid.NewGuid(),
+            OccurredAt: DateTime.UtcNow,
+            UserId: cmd.UserId,
+            Email: cmd.Email,
+            ChannelName: channel.Name,
+            ConfirmationUrl: BuildConfirmationUrl(token));
+
+        // aquí SÍ dejamos subir el error: el usuario pidió explícitamente el correo y debe saber si falló
+        await publisher.PublishAsync(
+            ChannelConfirmationRequested.RoutingKey,
+            confirmationRequested.EventId,
+            confirmationRequested,
+            CancellationToken.None);
 
         return new ResendConfirmationResult(channel.Id, channel.ConfirmationExpiresAt!.Value);
     }
+
+    // el enlace apunta al FRONTEND; la página de confirmación llamará a la API con el token
+    private string BuildConfirmationUrl(string token) =>
+        $"{configuration["Frontend:BaseUrl"]}/channels/confirm?token={Uri.EscapeDataString(token)}";
 }
